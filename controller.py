@@ -3,14 +3,9 @@ import cv2
 import numpy as np
 import math
 from PIL import Image
-import matplotlib.pyplot as plt
-import cv2
-import glob
-import math
-import serial, time, sys, termios, tty, threading
+import serial, time, sys, termios, tty
 from picamera2 import Picamera2
 from libcamera import controls, Transform
-from collections import deque
 
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=0.2, write_timeout=0.2)
@@ -20,7 +15,7 @@ picam2 = Picamera2()
 
 config = picam2.create_video_configuration(
     main={"size": (1280, 720)},
-    transform=Transform(rotation=180)      # 👈 rotate image
+    transform=Transform(rotation=180)
 )
 
 picam2.configure(config)
@@ -84,16 +79,16 @@ def get_offset(image, scan_frac=0.90, min_pixels=20):
     mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel)
 
     scan_y = int(h * scan_frac)
-    scan_y = max(0, min(scan_y, h - 1))   # clamp to valid range
+    scan_y = max(0, min(scan_y, h - 1))
 
     row = mask_clean[scan_y, :]
     xs = np.where(row > 0)[0]
     if len(xs) < min_pixels:
-        return None   # no reliable offset
+        return None
 
     x_wall = float(np.mean(xs))
 
-    x_ref = 300 # 15
+    x_ref = 300
     offset = x_wall - x_ref   # negative -> wall left of ref, positive -> right
     print(f"x_wall: {x_wall:.1f}, x_ref: {x_ref} offset: {offset:.1f}")
 
@@ -104,7 +99,7 @@ if __name__ == "__main__":
     base = 140
     i = 0
     last_saw_wall_s = time.time()
-    print("starting main loop")
+    print("Starting main loop")
 
     
     while True:
@@ -155,7 +150,7 @@ if __name__ == "__main__":
             continue
         last_saw_wall_s = time.time()
         if x_offset > 300:
-            print("Large offset, turning right--------------------")
+            # print("Large offset, turning right--------------------")
             start = time.time()
             send_motor_commands_time(100, -100, 0.4)
             continue
